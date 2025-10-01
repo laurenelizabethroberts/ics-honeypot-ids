@@ -1,0 +1,12 @@
+# local python files
+__pycache__/
+*.pyc
+
+# captures and logs (you may want some of these in repo, but ignore by default)
+*.pcap
+/var/log/
+/etc/suricata/
+
+# OS artifacts
+.DS_Store
+*.swp
