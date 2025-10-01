@@ -1,10 +1,2 @@
-# Generic: alert on any TCP to Modbus (host port 5020) so we can verify alerts immediately
 alert tcp any any -> any 5020 (msg:"ICS: TCP to Modbus port (5020)"; sid:1000010; rev:1; classtype:attempted-recon; priority:2;)
-
-# Specific: Modbus Write Single Coil (Function Code 5)
 alert modbus any any -> any 5020 (msg:"ICS: Modbus Write Single Coil (FC 5)"; modbus: function 5; sid:1000001; rev:2; classtype:attempted-dos; priority:1;)
-# Recon/enumeration on Modbus reads
-alert modbus any any -> any 5020 (msg:"ICS: Modbus Read Coils (FC 1)";            modbus: function 1; sid:1000002; rev:1; classtype:attempted-recon; priority:3;)
-alert modbus any any -> any 5020 (msg:"ICS: Modbus Read Discrete Inputs (FC 2)";  modbus: function 2; sid:1000003; rev:1; classtype:attempted-recon; priority:3;)
-alert modbus any any -> any 5020 (msg:"ICS: Modbus Read Holding Registers (FC 3)";modbus: function 3; sid:1000004; rev:1; classtype:attempted-recon; priority:3;)
-alert modbus any any -> any 5020 (msg:"ICS: Modbus Read Input Registers (FC 4)";  modbus: function 4; sid:1000005; rev:1; classtype:attempted-recon; priority:3;)
