@@ -211,7 +211,7 @@ Do not expose to the public internet unless you understand the risks and complia
 * Add PCAP capture (e.g., tcpdump) for packet-level forensics in your incident.md.
 
 # License
-MIT (or your choice). Include a LICENSE file.
+MIT.
 
 
 
