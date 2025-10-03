@@ -1,0 +1,117 @@
+**PCAPs — Capture, Storage & Analysis (for ICS Honeypot Lab)**
+
+This folder should contain packet captures (pcap) used as evidence for incident.md. The guidance below shows safe, repeatable ways to capture traffic (host or container), name and compress files, add metadata, and run quick analyses.
+
+# Folder Layout
+
+pcaps/
+├── samples/                # small example pcaps suitable for repo
+
+│   └── modbus_probe_sample.pcap
+
+├── raw/                    # full raw captures (KEEP OUT OF GIT)
+
+│   └── incident1.pcap
+
+├── compressed/             # gzip copies of larger captures for archive
+
+│   └── incident1.pcap.gz
+
+└── README.md
+
+1) Capture Commands
+
+A — Capture on the host (recommended for Docker host)
+
+Replace eth0 with the interface that sees honeypot traffic (e.g., docker0, br-..., ens33).
+
+                        Capture only Modbus (TCP port 5020 in this repo):
+
+sudo mkdir -p pcaps/raw
+sudo tcpdump -i eth0 tcp port 5020 -w pcaps/raw/incident1.pcap
+
+                         Rotate files every 100 MB (keeps disk from filling):
+
+sudo tcpdump -i eth0 tcp port 5020 -C 100 -W 10 -w pcaps/raw/incident1-%02d.pcap
+
+                         Timed rotation (rotate every 1 hour):
+
+sudo tcpdump -i eth0 tcp port 5020 -G 3600 -w pcaps/raw/incident1-%Y%m%d-%H%M%S.pcap
+
+
+B — Capture inside (or for) a container
+
+If you prefer to run tcpdump in a container that has access to the network:
+
+docker run --rm --net host --cap-add=NET_ADMIN --cap-add=NET_RAW -v $(pwd)/pcaps/raw:/pcaps nicolaka/netshoot \
+  tcpdump -i eth0 tcp port 5020 -w /pcaps/incident1.pcap
+
+C — Capture with suricata PCAP output
+
+Suricata can produce pcap files via pcap-log or pcap-file runtime options — see your Suricata config if you want Suricata to generate pcaps for alerts.
+
+2) Basic pcap file hygiene (always do these)
+
+After capture, compute checksums and record metadata:
+
+cd pcaps
+sha256sum raw/incident1.pcap > raw/incident1.pcap.sha256
+ls -lh raw/incident1.pcap
+
+Create a small metadata file raw/incident1.pcap.meta:
+
+capture_name: incident1.pcap
+capture_start: 2025-10-03T15:02:03Z
+capture_end:   2025-10-03T15:05:10Z
+interface:     eth0
+filter:        tcp port 5020
+command:       tcpdump -i eth0 tcp port 5020 -w incident1.pcap
+sha256:        <copy from sha256sum>
+notes:         nmap modbus-discover run from 127.0.0.1; Suricata alert sid:1000004
+
+Store that alongside the pcap. This helps anyone reproduce your analysis and proves chain-of-custody for your demos.
+
+3) Compress & archive large captures
+
+gzip -c raw/incident1.pcap > compressed/incident1.pcap.gz
+sha256sum compressed/incident1.pcap.gz > compressed/incident1.pcap.gz.sha256
+
+Add a small samples/ pcap (e.g., modbus_probe_sample.pcap) to the repo if you want viewers to open it in Wireshark without downloading large files.
+
+4) Quick analysis commands
+View a short summary with tcpdump:
+sudo tcpdump -nn -r pcaps/raw/incident1.pcap -c 50
+
+List flows with tshark:
+tshark -r pcaps/raw/incident1.pcap -q -z conv,tcp
+
+Filter Modbus frames (display filter in tshark/wireshark)
+
+Wireshark/tshark understands Modbus:
+tshark -r pcaps/raw/incident1.pcap -Y "modbus" -T fields -e frame.time -e ip.src -e ip.dst -e modbus.func_code -e modbus.unit_id -e modbus.data
+
+Example: show timestamp, src/dst, function code
+tshark -r pcaps/raw/incident1.pcap -Y "modbus" -T fields -e frame.time -e ip.src -e ip.dst -e modbus.func_code
+
+Extract packets that triggered a Suricata alert (if you have EVE JSON)
+
+If your eve.json shows a flow or packet index, you can tcpdump -r with host/port filters:
+# extract traffic between src and dst
+tcpdump -r pcaps/raw/incident1.pcap host 127.0.0.1 and port 5020 -w pcaps/suspect-127.0.0.1-5020.pcap
+
+Convert to CSV for quick IOC extraction
+tshark -r pcaps/raw/incident1.pcap -T fields -e frame.time -e ip.src -e ip.dst -e tcp.srcport -e tcp.dstport -e modbus.func_code -E header=y -E separator=, > pcaps/suspect.csv
+
+5) Example workflow (quickstart)
+
+1. Start capture:
+sudo tcpdump -i eth0 tcp port 5020 -w pcaps/raw/incident1.pcap
+2. Run attacker (nmap/modbus probe).
+3. Stop capture (Ctrl+C).
+4. Compute checksum & create metadata:
+sha256sum pcaps/raw/incident1.pcap > pcaps/raw/incident1.pcap.sha256
+# create incident1.pcap.meta (see template above)
+5. Trim to small sample and compress (for repo):
+editcap -r pcaps/raw/incident1.pcap pcaps/samples/modbus_probe_sample.pcap 1-120
+gzip -c pcaps/samples/modbus_probe_sample.pcap > pcaps/compressed/modbus_probe_sample.pcap.gz
+
