@@ -1,6 +1,6 @@
 # ICS Honeypot with Suricata IDS (Modbus)
-
 ![License](https://img.shields.io/github/license/laurenelizabethroberts/ics-honeypot-ids)
+
 
 An ICS honeypot lab using Conpot monitored by Suricata with custom Modbus rules.
 Use it to practice detection engineering for OT/ICS, generate incident reports, and showcase blue-team skills.
