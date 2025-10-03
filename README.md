@@ -1,6 +1,5 @@
 # ICS Honeypot with Suricata IDS (Modbus)
-![License](https://img.shields.io/github/license/laurenelizabethroberts/ics-honeypot-ids)
-
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 
 An ICS honeypot lab using Conpot monitored by Suricata with custom Modbus rules.
