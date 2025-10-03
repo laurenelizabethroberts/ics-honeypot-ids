@@ -1,4 +1,5 @@
 # ICS Honeypot with Suricata IDS (Modbus)
+![License](https://img.shields.io/github/license/laurenelizabethroberts/ics-honeypot-ids?cacheSeconds=1)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 
