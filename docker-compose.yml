@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+  conpot:
+    image: honeynet/conpot:latest
+    container_name: conpot
+    restart: unless-stopped
+    command: ["-t", "default"] # use default ICS templates
+    ports:
+    - "1502:502" # expose Modbus on host as 1502 -> container 502 to avoid conflicts
+    networks:
+    - icynet
+
+  suricata:
+    image: jasonish/suricata:latest
+    container_name: suricata
+    restart: unless-stopped
+    depends_on:
+    - conpot
+    volumes:
+    - ./suricata/rules:/etc/suricata/rules.d:ro
+    - ./suricata/log:/var/log/suricata
+    command: [
+    "-i","eth0",
+    "-S","/etc/suricata/rules.d/custom.modbus.rules",
+    "-l","/var/log/suricata",
+    "-k","none"
+    ]
+    networks:
+    - icynet
+
+  attacker:
+    image: python:3.11-slim
+    container_name: attacker
+    depends_on:
+    - conpot
+    - suricata
+    working_dir: /app
+    volumes:
+    - ./scripts:/app
+    entrypoint: ["sleep", "infinity"] # we will exec into this container when needed
+    networks:
+    - icynet
+
+networks:
+  icynet:
+    driver: bridge
