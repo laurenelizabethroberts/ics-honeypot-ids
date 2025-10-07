@@ -1,0 +1,12 @@
+[
+  {
+    "event_type": "alert",
+    "app_proto": "modbus",
+    "alert": {
+      "signature_id": 1000001,
+      "signature": "MODBUS Read Coils to PLC",
+      "severity": 2
+    },
+    "dest_port": 502
+  }
+]
