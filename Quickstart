@@ -1,0 +1,11 @@
+# 1) Start the lab
+make up
+
+# 2) Trigger some Modbus traffic
+make trigger
+
+# 3) Watch alerts (Ctrl+C to stop)
+make alerts
+
+# 4) Tear down when finished
+make down
