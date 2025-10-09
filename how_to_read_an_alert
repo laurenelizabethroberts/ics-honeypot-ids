@@ -1,0 +1,7 @@
+### Example analyst flow (60-second tour)
+
+1. **Start stack:** `docker compose up -d`
+2. **Replay PCAP (sample provided):** `./scripts/replay.sh data/pcaps/modbus_sample.pcap`
+3. **Inspect alerts:** `jq -r '.alert // empty | .signature' logs/eve.json | sort | uniq -c | sort -nr | head`
+4. **Pivot to context:** `jq -r '.src_ip, .dest_ip, .app_proto, .event_type' logs/eve.json | head -20`
+5. **Record findings:** Update `reports/analyst-notes.md` with root cause, severity, and mitigations.
