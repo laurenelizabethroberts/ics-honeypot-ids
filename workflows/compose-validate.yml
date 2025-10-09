@@ -1,0 +1,44 @@
+name: Compose Validate
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+
+jobs:
+  compose-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Docker versions
+        run: |
+          docker --version
+          docker compose version
+
+      # Validate primary compose file (adjust filename if you use a different name)
+      - name: Validate docker-compose.yml
+        run: |
+          if [ -f "docker-compose.yml" ]; then
+            docker compose -f docker-compose.yml config > /dev/null
+          fi
+
+      # Optionally validate any other compose files (compose*.yml)
+      - name: Validate all compose*.yml files (if present)
+        run: |
+          shopt -s nullglob
+          for f in compose*.yml; do
+            echo "Validating $f"
+            docker compose -f "$f" config > /dev/null
+          done
+
+      # Lightweight YAML lint (helps catch bad indentation/keys)
+      - name: Install yamllint
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y yamllint
+      - name: Lint YAML files
+        run: |
+          yamllint -d "{extends: default, rules: {line-length: disable}}" .
